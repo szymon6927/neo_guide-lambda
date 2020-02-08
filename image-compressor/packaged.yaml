@@ -1,0 +1,17 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: 'image-compressor
+
+  Resize and compress image from S3 bucket
+
+  '
+Globals:
+  Function:
+    Timeout: 5
+Resources:
+  ResizeAndCompressFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: s3://neo-guide-lambda/d4fe33adeee7956cc7ca8e2b90b0c760
+      Handler: app.lambda_handler
+      Runtime: python3.8
