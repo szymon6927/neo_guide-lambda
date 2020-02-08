@@ -1,7 +1,5 @@
 -r requirements.in
 
-pytest
 pre-commit
 black
 isort
-pytest
