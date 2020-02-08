@@ -1,4 +1,4 @@
-from common.types import Event
+from core.types import Event
 
 
 class EventParser:
@@ -10,4 +10,3 @@ class EventParser:
 
     def get_bucket_name(self):
         return self.event.get('Records')[0].get('s3').get('bucket').get('name')
-

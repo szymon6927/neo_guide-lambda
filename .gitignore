@@ -110,5 +110,6 @@ dmypy.json
 # App
 .idea
 venv
+.DS_Store
 
 # End of https://www.gitignore.io/api/python

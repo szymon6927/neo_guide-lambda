@@ -1,15 +1,13 @@
 update-deps:
 	pip install pip-tools
-	pip-compile --generate-hashes --allow-unsafe notifications/dev.in --output-file notifications/dev.txt
-	pip-compile --generate-hashes --allow-unsafe notifications/requirements.in --output-file notifications/requirements.txt
+	pip-compile --generate-hashes --allow-unsafe src/dev.in --output-file src/dev.txt
+	pip-compile --generate-hashes --allow-unsafe src/requirements.in --output-file src/requirements.txt
 
 format:
-	black notifications --skip-string-normalization
-	isort --apply
+	black src/ --skip-string-normalization
 
 run-tests:
-	cd notifications/ && python -m pytest tests/ -v -s
-
+	cd src/ && python -m pytest tests/ -v -s
 
 sam-build:
 	sam build
