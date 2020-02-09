@@ -100,7 +100,7 @@ workflows:
           requires:
             - image_compressor_install_requirements
             - image_compressor_run_tests
-          filters:
-            branches:
-              only:
-                - master
+#          filters:
+#            branches:
+#              only:
+#                - master
