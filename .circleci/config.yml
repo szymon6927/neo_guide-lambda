@@ -77,7 +77,7 @@ jobs:
       - aws-sam/build:
           aws-region: STAGING_AWS_DEFAULT_REGION
           template: image-compressor/template.yaml
-          output-template-file: packaged.yaml
+          output-template-file: image-compressor/packaged.yaml
           s3-bucket: neo-guide-lambda
       - aws-sam/deploy:
           aws-region: STAGING_AWS_DEFAULT_REGION
