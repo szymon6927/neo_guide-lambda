@@ -10,9 +10,6 @@ attach_workspace: &attach_workspace
 repo_working_dir: &repo_working_dir
   working_directory: ~/workspace/repo
 
-#image_compressor_repo_working_dir: &image_compressor_repo_working_dir
-#  working_directory: ~/workspace/repo
-
 orbs:
   aws-cli: circleci/aws-cli@0.1.13
   aws-sam: circleci/aws-serverless@1.0.2
@@ -58,13 +55,6 @@ jobs:
             - repo
             - venv
 
-#  build_app:
-#    executor: aws-serverless/default
-#    steps:
-#      - checkout_code
-#      - aws-serverless/install
-#      - run: sam build --use-container
-
   image_compressor_run_tests:
     executor: python
     steps:
@@ -74,17 +64,6 @@ jobs:
           command: |
             . ~/workspace/venv/bin/activate
             cd image-compressor/src && python -m pytest
-
-#  confiugre_aws_cli:
-#    <<: *repo_working_dir
-#    executor: aws-cli/default
-#    steps:
-#      - <<: *attach_workspace
-#      - aws-cli/install
-#      - aws-cli/configure:
-#          aws-access-key-id: STAGING_AWS_ACCESS_KEY_ID
-#          aws-secret-access-key: STAGING_AWS_SECRET_ACCESS_KEY
-#          aws-region: STAGING_AWS_DEFAULT_REGION
 
   push_and_deploy_to_staging:
     <<: *repo_working_dir
@@ -117,16 +96,11 @@ workflows:
       - image_compressor_run_tests:
           requires:
             - image_compressor_install_requirements
-#      - confiugre_aws_cli:
-#          requires:
-#            - image_compressor_install_requirements
-#            - image_compressor_run_tests
       - push_and_deploy_to_staging:
           requires:
             - image_compressor_install_requirements
             - image_compressor_run_tests
-#            - confiugre_aws_cli
-#             filters:
-#              branches:
-#                only:
-#                  - master
+          filters:
+            branches:
+              only:
+                - master
