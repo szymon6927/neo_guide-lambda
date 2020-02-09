@@ -106,3 +106,9 @@ def s3_delete_object_event():
             }
         ]
     }
+
+
+@pytest.fixture(autouse=True)
+def set_tinify_api_key(monkeypatch):
+    """Set the USER env var to assert the behavior."""
+    monkeypatch.setenv('TINIFY_API_KEY', 'XXX')
