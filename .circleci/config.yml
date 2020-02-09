@@ -1,0 +1,110 @@
+version: 2.1
+
+default_python_image: &default_python_image
+  image: circleci/python:3.8
+
+attach_workspace: &attach_workspace
+  attach_workspace:
+    at: ~/workspace
+
+repo_working_dir: &repo_working_dir
+  working_directory: ~/workspace/repo
+
+orbs:
+  aws-cli: circleci/aws-cli@0.1.13
+  aws-sam: circleci/aws-sam-serverless@1.0.1
+
+executors:
+  python:
+    <<: *repo_working_dir
+    docker:
+      - <<: *default_python_image
+
+jobs:
+  checkout_code:
+    executor: python
+    steps:
+      - checkout
+      - persist_to_workspace:
+          root: ~/workspace
+          paths:
+            - repo
+
+  image_compressor_install_requirements:
+    executor: python
+    steps:
+      - <<: *attach_workspace
+      - restore_cache:
+          keys:
+            - v1-dependencies-{{ checksum "image-compressor/src/dev.txt" }}
+            # fallback to using the latest cache if no exact match is found
+            - v1-dependencies-
+      - run:
+          name: install dependencies
+          command: |
+            python3 -m venv ~/workspace/venv
+            . ~/workspace/venv/bin/activate
+            pip install -r image-compressor/src/dev.txt
+      - save_cache:
+          paths:
+            - ~/workspace/venv
+          key: v1-dependencies-{{ checksum "image-compressor/src/dev.txt" }}
+      - persist_to_workspace:
+          root: ~/workspace
+          paths:
+            - repo
+            - venv
+
+#  build_app:
+#    executor: aws-serverless/default
+#    steps:
+#      - checkout_code
+#      - aws-serverless/install
+#      - run: sam build --use-container
+
+  image_compressor_run_tests:
+    executor: python
+    steps:
+      - <<: *attach_workspace
+      - run:
+          name: run tests
+          command: |
+            . ~/workspace/venv/bin/activate
+            cd image-compressor/src && python -m pytest
+
+  push_and_deploy_to_staging:
+    <<: *repo_working_dir
+    executor: aws-sam/default
+    steps:
+      - <<: *attach_workspace
+      - aws-sam/install
+      - aws-cli/configure:
+          aws-access-key-id: STAGING_AWS_ACCESS_KEY_ID
+          aws-secret-access-key: STAGING_AWS_SECRET_ACCESS_KEY
+          aws-region: STAGING_AWS_DEFAULT_REGION
+      - aws-sam/build:
+          template: image-compressor/template.yml
+          s3-bucket: $AWS_ARTIFACT_BUCKET
+      - aws-sam/deploy:
+          stack-name: image-compressor
+          template: image-compressor/packaged.yaml
+
+workflows:
+  version: 2.1
+  build-and-deploy:
+    jobs:
+      - checkout_code
+      - image_compressor_install_requirements:
+          requires:
+            - checkout_code
+      - image_compressor_run_tests:
+          requires:
+            - image_compressor_install_requirements
+      - push_and_deploy_to_staging:
+          requires:
+            - image_compressor_install_requirements
+            - image_compressor_run_tests
+#            filters:
+#              branches:
+#                only:
+#                  - master
