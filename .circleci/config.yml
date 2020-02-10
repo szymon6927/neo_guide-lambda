@@ -65,7 +65,7 @@ jobs:
             . ~/workspace/venv/bin/activate
             cd image-compressor/src && python -m pytest
 
-  push_and_deploy_to_staging:
+  deploy_image_compressor_lambda_function:
     <<: *repo_working_dir
     executor: aws-sam/default
     steps:
@@ -78,11 +78,47 @@ jobs:
           aws-region: STAGING_AWS_DEFAULT_REGION
           template: image-compressor/template.yaml
           output-template-file: image-compressor/packaged.yaml
-          s3-bucket: neo-guide-lambda
+#          s3-bucket: neo-guide-lambda
+      - run:
+          name: Package ImageCompressor lambda function
+          command: sam package --template-file .aws-sam/build/template.yaml --s3-bucket neo-guide-lambda --output-template-file image-compressor/packaged.yaml --profile default
       - aws-sam/deploy:
           aws-region: STAGING_AWS_DEFAULT_REGION
           stack-name: image-compressor
           template: image-compressor/packaged.yaml
+#      - aws-sam/deploy:
+#          aws-region: STAGING_AWS_DEFAULT_REGION
+#          stack-name: image-compressor
+#          template: image-compressor/packaged.yaml
+
+
+#  package_image_compressor_lambda_function:
+#    <<: *repo_working_dir
+#    executor: aws-sam/default
+#    steps:
+#      - <<: *attach_workspace
+#      - aws-sam/install:
+#          aws-access-key-id: STAGING_AWS_ACCESS_KEY_ID
+#          aws-secret-access-key: STAGING_AWS_SECRET_ACCESS_KEY
+#          aws-region: STAGING_AWS_DEFAULT_REGION
+#      - run:
+#          name: Package ImageCompressor lambda function
+#          command: sam package --template-file .aws-sam/build/template.yaml --s3-bucket neo-guide-lambda --output-template-file image-compressor/packaged.yaml --profile default
+#
+#  deploy_image_compressor_lambda_function:
+#    <<: *repo_working_dir
+#    executor: aws-sam/default
+#    steps:
+#      - <<: *attach_workspace
+#      - aws-sam/install:
+#          aws-access-key-id: STAGING_AWS_ACCESS_KEY_ID
+#          aws-secret-access-key: STAGING_AWS_SECRET_ACCESS_KEY
+#          aws-region: STAGING_AWS_DEFAULT_REGION
+#      - aws-sam/deploy:
+#          aws-region: STAGING_AWS_DEFAULT_REGION
+#          stack-name: image-compressor
+#          template: image-compressor/packaged.yaml
+
 
 
 workflows:
@@ -96,9 +132,15 @@ workflows:
       - image_compressor_run_tests:
           requires:
             - image_compressor_install_requirements
-      - push_and_deploy_to_staging:
+#      - build_image_compressor_lambda_function:
+#          requires:
+#            - image_compressor_install_requirements
+#            - image_compressor_run_tests
+#      - package_image_compressor_lambda_function:
+#          requires:
+#            - build_image_compressor_lambda_function
+      - deploy_image_compressor_lambda_function:
           requires:
-            - image_compressor_install_requirements
             - image_compressor_run_tests
 #          filters:
 #            branches:
